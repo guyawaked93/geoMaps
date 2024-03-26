@@ -1,6 +1,5 @@
 import folium
-from folium import plugins
-from folium.plugins import Geocoder
+from folium.plugins import MarkerCluster, Geocoder
 import openpyxl
 from concurrent.futures import ThreadPoolExecutor
 
@@ -9,21 +8,21 @@ def create_marker(coord):
         <b>{coord['Nome da Escola']}</b><br>
         <i>{coord['Município']}</i>, {coord['UF']}<br>
         <b>Endereço:</b> {coord['Endereço']}<br>
-        <b>Kit Gerador Solar:</b> {coord['Kit Gerador Solar (estimado)']}<br>
-        <b>Kit Instalação Elétrica Interna:</b> {coord['Kit Instalação Elétrica Interna (estimado)']}<br>
+        <b>Kit Gerador Solar:</b> {coord.get('Kit Gerador Solar (estimado)', 'N/A')}<br>
+        <b>Kit Instalação Elétrica Interna:</b> {coord.get('Kit Instalação Elétrica Interna (estimado)', 'N/A')}<br>
     """
-    return folium.Marker([coord["Latitude"], coord["Longitude"]], popup=folium.Popup(popup_info, max_width=300), icon=folium.Icon(color='green'))
+    return folium.Marker(location=[coord["Latitude"], coord["Longitude"]], popup=folium.Popup(popup_info, max_width=300), icon=folium.Icon(color='green'))
 
 def create_marker_red(coord):
     popup_info = f"""
         <b>{coord['Nome da Escola']}</b><br>
         <i>{coord['Município']}</i>, {coord['UF']}<br>
         <b>Endereço:</b> {coord['Endereço']}<br>
-        <b>Kit Wi-Fi (estimado):</b> {coord['Kit Wi-Fi (estimado)']}<br>
-        <b>AP adicional (estimado):</b> {coord['AP adicional (estimado)']}<br>
-        <b>Nobreak:</b> {coord['Nobreak']}<br>
+        <b>Kit Wi-Fi (estimado):</b> {coord.get('Kit Wi-Fi (estimado)', 'N/A')}<br>
+        <b>AP adicional (estimado):</b> {coord.get('AP adicional (estimado)', 'N/A')}<br>
+        <b>Nobreak:</b> {coord.get('Nobreak', 'N/A')}<br>
     """
-    return folium.Marker([coord["Latitude"], coord["Longitude"]], popup=folium.Popup(popup_info, max_width=300), icon=folium.Icon(color='red'))
+    return folium.Marker(location=[coord["Latitude"], coord["Longitude"]], popup=folium.Popup(popup_info, max_width=300), icon=folium.Icon(color='red'))
 
 wb = openpyxl.load_workbook("escolas.xlsx")
 sheet = wb.active
@@ -66,13 +65,10 @@ for row in sheet_redimensionamentoz.iter_rows(min_row=2):
             "Nobreak": row[9].value
         })
 
-center_coords = next((coord["Latitude"], coord["Longitude"]) for coord in coordenadas 
-                     if coord["Latitude"] is not None and coord["Longitude"] is not None)
+m = folium.Map(location=[-15.788, -47.879], zoom_start=4)
 
-m = folium.Map(location=center_coords, zoom_start=4)
-
-cluster_electricity = plugins.MarkerCluster(name='Electricidade').add_to(m)
-cluster_wifi = plugins.MarkerCluster(name='Wifi').add_to(m)
+cluster_electricity = MarkerCluster(name='Electricidade').add_to(m)
+cluster_wifi = MarkerCluster(name='Wifi').add_to(m)
 
 with ThreadPoolExecutor() as executor:
     markers = list(executor.map(create_marker, coordenadas))
@@ -89,5 +85,34 @@ for marker in markers_red:
 folium.LayerControl().add_to(m)
 
 Geocoder().add_to(m)
+
+sidebar_html = """
+<div style="position: fixed; top: 50px; left: 50px; width: 200px; height: 400px; overflow: auto; padding: 5px; border:2px solid black; background-color: transparent; z-index:9999" id="sidebar">
+    <h4>Escolas</h4>
+    <ul>
+"""
+
+for coord in coordenadas:
+    sidebar_html += f'<li><a href="#" onclick="m.setView([{coord["Latitude"]}, {coord["Longitude"]}]); return false;">{coord["Nome da Escola"]}</a></li>'
+
+sidebar_html += """
+    </ul>
+</div>
+<button style="position: fixed; top: 90px; left: 10px; z-index:9999" onclick="toggleSidebar()">☰</button>
+<script>
+    var sidebarVisible = true;
+    function toggleSidebar() {
+        var sidebar = document.getElementById('sidebar');
+        if (sidebarVisible) {
+            sidebar.style.display = 'none';
+        } else {
+            sidebar.style.display = 'block';
+        }
+        sidebarVisible = !sidebarVisible;
+    }
+</script>
+"""
+
+m.get_root().html.add_child(folium.Element(sidebar_html))
 
 m.save("index.html")

@@ -11,7 +11,7 @@ def create_marker(coord):
         <b>Kit Gerador Solar:</b> {coord.get('Kit Gerador Solar (estimado)', 'N/A')}<br>
         <b>Kit Instalação Elétrica Interna:</b> {coord.get('Kit Instalação Elétrica Interna (estimado)', 'N/A')}<br>
     """
-    return folium.Marker(location=[coord["Latitude"], coord["Longitude"]], popup=folium.Popup(popup_info, max_width=300), icon=folium.Icon(color='green'))
+    return folium.Marker(location=[coord["Latitude"] + offset, coord["Longitude"] + offset], popup=folium.Popup(popup_info, max_width=300), icon=folium.Icon(color='green'))
 
 def create_marker_red(coord):
     popup_info = f"""
@@ -23,6 +23,8 @@ def create_marker_red(coord):
         <b>Nobreak:</b> {coord.get('Nobreak', 'N/A')}<br>
     """
     return folium.Marker(location=[coord["Latitude"], coord["Longitude"]], popup=folium.Popup(popup_info, max_width=300), icon=folium.Icon(color='red'))
+
+offset = 0.0001
 
 wb = openpyxl.load_workbook("escolas.xlsx")
 sheet = wb.active

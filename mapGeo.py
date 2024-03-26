@@ -25,7 +25,7 @@ def create_marker_red(coord):
     return folium.Marker([coord["Latitude"], coord["Longitude"]], popup=folium.Popup(popup_info, max_width=300), icon=folium.Icon(color='red'))
 
 wb = openpyxl.load_workbook("escolas.xlsx")
-sheet = wb.active 
+sheet = wb.active
 
 coordenadas = []
 for row in sheet.iter_rows(min_row=2): 
@@ -70,20 +70,30 @@ center_coords = next((coord["Latitude"], coord["Longitude"]) for coord in coorde
 
 m = folium.Map(location=center_coords, zoom_start=4)
 
-cluster = plugins.MarkerCluster().add_to(m)  
+cluster_green = plugins.MarkerCluster(name='Green Markers').add_to(m)
+cluster_red = plugins.MarkerCluster(name='Red Markers').add_to(m)
 
+# Criação do mapa e dos clusters
+m = folium.Map(location=center_coords, zoom_start=4)
+
+cluster_electricity = plugins.MarkerCluster(name='Electricidade').add_to(m)
+cluster_wifi = plugins.MarkerCluster(name='Wifi').add_to(m)
+
+# Adição dos marcadores de eletricidade ao cluster de eletricidade
 with ThreadPoolExecutor() as executor:
     markers = list(executor.map(create_marker, coordenadas))
 
 for marker in markers:
-    marker.add_to(cluster)
+    marker.add_to(cluster_electricity)
 
+# Adição dos marcadores de wifi ao cluster de wifi
 with ThreadPoolExecutor() as executor:
     markers_red = list(executor.map(create_marker_red, coordenadas_redimensionamentoz))
 
 for marker in markers_red:
-    marker.add_to(cluster)
+    marker.add_to(cluster_wifi)
 
-plugins.LocateControl().add_to(m)
+# Adição do controle de camadas ao mapa
+folium.LayerControl().add_to(m)
 
 m.save("index.html")

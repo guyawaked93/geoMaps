@@ -1,5 +1,6 @@
 import folium
 from folium import plugins
+from folium.plugins import Geocoder
 import openpyxl
 from concurrent.futures import ThreadPoolExecutor
 
@@ -70,30 +71,23 @@ center_coords = next((coord["Latitude"], coord["Longitude"]) for coord in coorde
 
 m = folium.Map(location=center_coords, zoom_start=4)
 
-cluster_green = plugins.MarkerCluster(name='Green Markers').add_to(m)
-cluster_red = plugins.MarkerCluster(name='Red Markers').add_to(m)
-
-# Criação do mapa e dos clusters
-m = folium.Map(location=center_coords, zoom_start=4)
-
 cluster_electricity = plugins.MarkerCluster(name='Electricidade').add_to(m)
 cluster_wifi = plugins.MarkerCluster(name='Wifi').add_to(m)
 
-# Adição dos marcadores de eletricidade ao cluster de eletricidade
 with ThreadPoolExecutor() as executor:
     markers = list(executor.map(create_marker, coordenadas))
 
 for marker in markers:
     marker.add_to(cluster_electricity)
 
-# Adição dos marcadores de wifi ao cluster de wifi
 with ThreadPoolExecutor() as executor:
     markers_red = list(executor.map(create_marker_red, coordenadas_redimensionamentoz))
 
 for marker in markers_red:
     marker.add_to(cluster_wifi)
 
-# Adição do controle de camadas ao mapa
 folium.LayerControl().add_to(m)
+
+Geocoder().add_to(m)
 
 m.save("index.html")

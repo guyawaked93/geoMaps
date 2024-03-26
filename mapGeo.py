@@ -85,8 +85,10 @@ for marker in markers_red:
     marker.add_to(cluster_wifi)
 
 folium.LayerControl().add_to(m)
+folium.plugins.LocateControl().add_to(m)
 
 Geocoder().add_to(m)
+
 
 sidebar_html = """
 <div style="position: fixed; top: 50px; left: 50px; width: 200px; height: 400px; overflow: auto; padding: 5px; border:2px solid black; background-color: transparent; z-index:9999" id="sidebar">
@@ -100,7 +102,7 @@ for coord in coordenadas:
 sidebar_html += """
     </ul>
 </div>
-<button style="position: fixed; top: 90px; left: 10px; z-index:9999" onclick="toggleSidebar()">☰</button>
+<button style="position: fixed; top: 120px; left: 10px; z-index:9999" onclick="toggleSidebar()">☰</button>
 <script>
     var sidebarVisible = true;
     function toggleSidebar() {

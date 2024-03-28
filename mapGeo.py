@@ -4,12 +4,16 @@ import openpyxl
 from concurrent.futures import ThreadPoolExecutor
 
 def create_marker(coord):
+    geo_correta = coord.get('GeoCorreta')
+    geo_correta_line = f"<b>GeoCorreta:</b> {geo_correta}<br>" if geo_correta else ""
+
     popup_info = f"""
         <b>{coord['Nome da Escola']}</b><br>
         <i>{coord['Município']}</i>, {coord['UF']}<br>
         <b>Endereço:</b> {coord['Endereço']}<br>
         <b>Kit Gerador Solar:</b> {coord.get('Kit Gerador Solar (estimado)', 'N/A')}<br>
         <b>Kit Instalação Elétrica Interna:</b> {coord.get('Kit Instalação Elétrica Interna (estimado)', 'N/A')}<br>
+        {geo_correta_line}
     """
     return folium.Marker(location=[coord["Latitude"] + offset, coord["Longitude"] + offset], popup=folium.Popup(popup_info, max_width=300), icon=folium.Icon(color='green'))
 
@@ -24,7 +28,7 @@ def create_marker_red(coord):
     """
     return folium.Marker(location=[coord["Latitude"], coord["Longitude"]], popup=folium.Popup(popup_info, max_width=300), icon=folium.Icon(color='red'))
 
-offset = 0.0001
+offset = 0.0005
 
 wb = openpyxl.load_workbook("escolas.xlsx")
 sheet = wb.active
@@ -43,7 +47,8 @@ for row in sheet.iter_rows(min_row=2):
             "Latitude": float(latitude),
             "Longitude": float(longitude),
             "Kit Gerador Solar (estimado)": row[7].value,
-            "Kit Instalação Elétrica Interna (estimado)": row[8].value
+            "Kit Instalação Elétrica Interna (estimado)": row[8].value,
+            "GeoCorreta": row[9].value
         })
 
 wb_redimensionamentoz = openpyxl.load_workbook("redimensionamentoz.xlsx")

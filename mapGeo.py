@@ -18,6 +18,9 @@ def create_marker(coord):
     return folium.Marker(location=[coord["Latitude"] + offset, coord["Longitude"] + offset], popup=folium.Popup(popup_info, max_width=300), icon=folium.Icon(color='green'))
 
 def create_marker_red(coord):
+    geo_correta = coord.get('GeoCorreta')
+    geo_correta_line = f"<b>GeoCorreta:</b> {geo_correta}<br>" if geo_correta else ""
+    
     popup_info = f"""
         <b>{coord['Nome da Escola']}</b><br>
         <i>{coord['Município']}</i>, {coord['UF']}<br>
@@ -25,6 +28,7 @@ def create_marker_red(coord):
         <b>Kit Wi-Fi (estimado):</b> {coord.get('Kit Wi-Fi (estimado)', 'N/A')}<br>
         <b>AP adicional (estimado):</b> {coord.get('AP adicional (estimado)', 'N/A')}<br>
         <b>Nobreak:</b> {coord.get('Nobreak', 'N/A')}<br>
+        {geo_correta_line}
     """
     return folium.Marker(location=[coord["Latitude"], coord["Longitude"]], popup=folium.Popup(popup_info, max_width=300), icon=folium.Icon(color='red'))
 
@@ -69,7 +73,8 @@ for row in sheet_redimensionamentoz.iter_rows(min_row=2):
             "Longitude": float(longitude),
             "Kit Wi-Fi (estimado)": row[7].value,
             "AP adicional (estimado)": row[8].value,
-            "Nobreak": row[9].value
+            "Nobreak": row[9].value,
+            "GeoCorreta": row[10].value
         })
 
 m = folium.Map(location=[-15.788, -47.879], zoom_start=4)
